@@ -27,9 +27,19 @@ public with sharing class NextStepFuture {
      * Opportunity Next Step field is a standard field
      * Update the corresponding test class AsynchronousTest and test method nextStepFuture_testUpdateAllNextStep to cover test this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    @future
+    public static void updateAllNextStep (List<Id> accountIds, List<Id> opportunityIds) {
+        List<Account> accounts = [SELECT Id, Next_Step__c FROM Account WHERE Id IN :accountIds];
+        List<Opportunity> opps = [SELECT Id, NextStep FROM Opportunity WHERE Id IN :opportunityIds];
+        for(Account acc : accounts) {
+            acc.Next_Step__c = 'Meeting in the future';
+        }
+        update accounts;
+        for(Opportunity opp : opps) {
+            opp.NextStep = 'Meeting in the future';
+        }
+        update opps;
+    }
 
     /*
     * Question 2
@@ -41,9 +51,7 @@ public with sharing class NextStepFuture {
     public static void createDealAndUpdateRole() {
         Opportunity bigDeal = new Opportunity();
         insertBigDeal(bigDeal);
-
-        UserRole[] roles = [SELECT Id, Name FROM UserRole WHERE Id = :UserInfo.getUserRoleId() OR Name = 'CRO' LIMIT 1];
-        updateUserRoleName(roles);
+        updateUserRoleName();
     }
 
     // Helper method to insert big deal
@@ -58,13 +66,15 @@ public with sharing class NextStepFuture {
 
 
     // Helper method to update role name
-    private static void updateUserRoleName(UserRole[] roles){
+    @future
+    private static void updateUserRoleName(){
+        UserRole[] roles = [SELECT Id, Name FROM UserRole WHERE Id = :UserInfo.getUserRoleId() OR Name = 'CRO' LIMIT 1];
         UserRole role;
         if (roles.isEmpty()) {
             role = new UserRole();
             role.portalType = 'None'; 
             role.CaseAccessForAccountOwner = 'Edit'; 
-            // role.OpportunityAccessForAccountOwner = 'Edit'; //This may need to be uncommented depending on your orgs Organization Wide Defaults(OWD) settings. If you are receiving FIELD_INTEGRITY_EXCEPTION, field integrity exception: unknown (Opportunity access level below organization default): [unknown], uncomment this line.
+            role.OpportunityAccessForAccountOwner = 'Edit'; //This may need to be uncommented depending on your orgs Organization Wide Defaults(OWD) settings. If you are receiving FIELD_INTEGRITY_EXCEPTION, field integrity exception: unknown (Opportunity access level below organization default): [unknown], uncomment this line.
         } else {
             role = roles[0];
         }
